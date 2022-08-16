@@ -8,5 +8,4 @@ Supports:
 - Custom field size chooser
 
 # Code
-Uses Minefield Class written by myself! Very recommended if you ever want to make something like this
-[minefield.js](minefield.js)
+Uses a [Minefield Class](minefield.js) written by myself! Very recommended if you ever want to make something like this
