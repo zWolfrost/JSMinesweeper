@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>JS Minesweeper</title>
+      <link rel="icon" href="assets/minesweeper.ico">
+
+      <link rel="stylesheet" href="style.css">
+
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+      
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+      <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css"/>
+      <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js" integrity="sha256-6XMVI0zB8cRzfZjqKcD01PBsAy3FlDASrlC8SxCpInY=" crossorigin="anonymous"></script>
+      
+      <script type="module" src="script.js" defer></script>
+   </head>
+
+   <body>
+
+      <div id="cover" class="cover"></div>
+      <div id="blocker" class="blocker"></div>
+      <div id="loader" class="loader"></div>
+      
+      <br>
+
+      <div id="container" class="border1">
+
+         <div id="info" class="border2">
+            <div id="flags" class="border2">0</div>
+            <div id="smile" class="border1">🙂</div>
+            <div id="time" class="border2">00:00</div>
+         </div>
+
+         <div>
+            <table id="board" class="border2"></table>
+            <div id="gameover">
+               <span id="losetext">You lost!</span>
+               <span id="wintext">You won!</span>
+               <br>
+               <input type="submit" id="restartgame" value="Retry">
+            </div>
+         </div>
+
+         <div id="utils">
+            <div id="hint" class="border1 fa-solid fa-lightbulb"></div>
+            <div id="fullscreen" class="border1 fa-solid fa-expand"></div>
+            <div id="nightmode" class="border1 fa-solid fa-moon"></div>
+         </div>
+
+      </div>
+
+      <br>
+
+      <div id="fieldsizecontainer" class="border1">
+         <input type="range" id="fieldsize" class="range" min="4" max="45" value="10">
+         <span id="fieldsizecount">34</span>
+      </div>
+
+      <div id="customfieldsizecontainer" class="border1">
+         <div id="customfieldsizeexpand" class="border1 fa-solid fa-chevron-left"></div>
+
+         <label id="customrowspan">Rows:</label>
+         <input id="customrowscount" size="10" readonly value="10">
+         <input type="range" id="customrows" class="range" min="4" max="45" value="10">
+
+         <label id="customrowcolumns">Columns:</label>
+         <input id="customcolscount" size="10" readonly value="10">
+         <input type="range" id="customcols" class="range" min="4" max="45" value="10">
+      </div>
+
+      <br>
+
+      <div>
+         <input type="checkbox" id="createsolvablecheckbox" checked>
+         <label id="createsolvablelabel">Only create solvable games (experimental)</label>
+      </div>
+      
+   </body>
+</html>
