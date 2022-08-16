@@ -9,4 +9,4 @@ Supports:
 
 # Code
 Uses Minefield Class written by myself! Very recommended if you ever want to make something like this
-[minefield.js](https://gist.github.com/zWolfrost/6ee6b2c809a2a1cc4d0bf56805777ae7)
+[minefield.js](minefield.js)
