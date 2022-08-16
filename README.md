@@ -1,4 +1,4 @@
-# JSPaint
+# JSMinesweeper
 Web-based Minesweeper written in html and javascript. Supports a bunch of stuff.
 Live on https://zwolfrost.github.io/JSMinesweeper/
 
