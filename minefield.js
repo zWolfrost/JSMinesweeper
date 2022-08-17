@@ -39,11 +39,39 @@ export default class Minefield
       {
          if (this[i].isMine)
          {
-            this.getNearbyCells(i).forEach(cell => this[cell].mines++) //high up nearby cells' mines number by one
+            this.getNearbyCells(i).forEach(cell => this[cell].mines++) //highs up the nearby cells' mines number by one
          }
       }
 
       return this;
+   }
+
+   
+   /**
+    * Returns a simplified 2D-Array version of the minefield.
+    * 
+    *  - -1: A mine
+    *  - [0-8]: A cell with the number of nearby mines
+    */
+   simplify()
+   {
+      let simplified = [];
+
+      for (let i=0; i<this.rows; i++)
+      {
+         let col = [];
+
+         for (let j=0; j<this.cols; j++)
+         {
+            let cell = this[i*this.cols+j];
+
+            col.push(cell.isMine ? -1 : cell.mines);
+         }
+
+         simplified.push(col)
+      }
+
+      return simplified;
    }
 
 
