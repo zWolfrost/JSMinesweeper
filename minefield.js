@@ -76,7 +76,7 @@ export default class Minefield
 
 
    /**
-    *  - Opens a given cell keeping the minesweeper game rules
+    *  - Opens a given cell following the minesweeper game rules
     *  - Can also give the index of an already open cell that matches its nearby mines number with its nearby flags to automatically open all of its nearby not-flagged cells 
     * @param {Number} cell The index of the cell to open
     * @param {Boolean} firstclick If true, and a bomb is opened, it will be moved in another cell starting from 0 (default: {@link isNew()})
