@@ -1,4 +1,4 @@
-import Minefield from "./minefield.js";
+import Minefield from "./minesweeper.js";
 
 
 const BLOCKER = $("#blocker")[0];
