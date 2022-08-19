@@ -25,50 +25,6 @@ const RESTART = $("#restartgame");
 const SOLVABLE = $("#createsolvablecheckbox");
 
 
-HTMLElement.prototype.animateWith = function(name, seconds=1, mode="ease-in-out", repetitions=1, reset=true, callback=null)
-{
-   if (reset && this.style.animationName === name)
-   {
-      this.style.animation = "none";
-      this.offsetHeight;
-      this.style.animation = "none";
-   }
-
-   this.style.animation = `${name} ${seconds}s ${mode} ${repetitions}`;
-   
-   this.addEventListener("animationend", function()
-   {
-      this.style.animation = "none";
-      if (callback != null) callback();
-   }, {once: true});
-};
-
-HTMLTableElement.prototype.setMinefield = function(rows, cols, reset=true)
-{
-   if (reset) this.innerHTML = "";
-
-   const DEFTD = document.createElement("td");
-   DEFTD.className = "close border1";
-   DEFTD.appendChild(document.createElement("div"));
-
-   for (let i=0; i<rows; i++)
-   {
-      const TR = document.createElement("tr");
-      this.appendChild(TR);
-
-      for (let j=0; j<cols; j++)
-      {
-         const TD = DEFTD.cloneNode(true);
-
-         TD.id = i*cols+j;
-         
-         TR.appendChild(TD);
-      }
-   }
-
-   return 0;
-};
-
 let minefield = new Minefield(10, 10);
 let time = {beg: null, manage: null};
 
@@ -76,12 +32,13 @@ startGame(false);
 resizeBoard();
 
 
-//while (minefield.getCellArray().filter(x => x.isOpen).length <= 1) //minefield.isCleared() == false//
+//while (minefield.isCleared() == false) //minefield.getCellArray().filter(x => x.isOpen).length <= 1//
 //{
 //   minefield = new Minefield(10, 10);
-//   minefield.isSolvableFrom(0, false);
+//   minefield.isSolvableFrom(45, false);
 //}
-//loadGame();
+//setBoard();
+
 
 
 SMILE.on("mousedown", function()
@@ -139,7 +96,7 @@ BOARD.on("mousedown", "td", function()
                LOSETEXT.style.display = "inline-block";
                RESTART[0].style.display = "inline-block";
                
-               BOARD[0].animateWith("shake", 0.5);
+               animate(BOARD[0], "shake", 0.5);
             }
             else if (minefield.isCleared())
             {
@@ -149,7 +106,7 @@ BOARD.on("mousedown", "td", function()
                WINTEXT.style.display = "inline-block";
                RESTART[0].style.display = "inline-block";
    
-               WINTEXT.animateWith("shake", 1);
+               animate(WINTEXT, "shake", 1);
             }
          }
 
@@ -313,7 +270,7 @@ $("#hint").on("mousedown", function()
             }
             else
             {
-               this.animateWith("shake", 0.2)
+               animate(this, "shake", 0.2);
             }
          }
       }
@@ -403,23 +360,23 @@ $("#nightmode").on("mousedown", function()
          
          if (getCSSvar(KEYS[0]) == LIGHTMODE[0])
          {
-            document.body.animateWith("darken", 0.1, "ease-in", 1, true, () =>
+            animate(document.body, "darken", 0.1, {mode: "ease-in", callback: () =>
             {
                for (let i=0; i<KEYS.length; i++)
                {
                   setCSSvar(KEYS[i], DARKMODE[i]);
                }
-            });
+            }});
          }
          else
          {
-            document.body.animateWith("darken", 0.1, "reverse", 1, true, () =>
+            animate(document.body, "darken", 0.1, {mode: "reverse", callback: () =>
             {
                for (let i=0; i<KEYS.length; i++)
                {
                   setCSSvar(KEYS[i], LIGHTMODE[i]);
                }
-            });
+            }});
          }
       }
       else if (window.event.type == "mouseout") $(this).off("mouseup");
@@ -490,14 +447,14 @@ $("#customfieldsizeexpand").on("click", function()
    {
       $(this).removeClass("fa-chevron-left");
       $(this).addClass("fa-chevron-right");
-      CUSTOMSIZECONT.animateWith("left", 0.2, "ease-in-out", 1, true, () => CUSTOMSIZECONT.style.right = "0px");
+      animate(CUSTOMSIZECONT, "left", 0.2, {mode: "ease-in-out", callback: () => CUSTOMSIZECONT.style.right = "0px"});
    }
 
    else if ($(this).hasClass("fa-chevron-right"))
    {
       $(this).removeClass("fa-chevron-right");
       $(this).addClass("fa-chevron-left");
-      CUSTOMSIZECONT.animateWith("left", 0.2, "reverse", 1, true, () => CUSTOMSIZECONT.style.right = "-300px");
+      animate(CUSTOMSIZECONT, "left", 0.2, {mode: "reverse", callback: () => CUSTOMSIZECONT.style.right = "-300px"});
    }
 });
 CUSTOMROWS.on("input", function()
@@ -519,7 +476,7 @@ CUSTOMCOLS.on("input", function()
    resizeBoard();
 });
 
-SOLVABLE.on("click", () => SOLVABLE[0].animateWith("bigBounce", 0.2));
+SOLVABLE.on("click", () => animate(SOLVABLE[0], "bigBounce", 0.2));
 
 
 $(window).on("unload", function()
@@ -559,9 +516,9 @@ function startGame(anim=true)
    WINTEXT.style.display = "none";
    RESTART[0].style.display = "none";
    
-   if (anim) BOARD[0].animateWith("bounce", 0.1);
+   if (anim) animate(BOARD[0], "bounce", 0.1);
    
-   BOARD[0].setMinefield(minefield.rows, minefield.cols);
+   createMinefieldUI(BOARD[0], minefield.rows, minefield.cols);
    
    clearInterval(time.manage);
 };
@@ -569,7 +526,7 @@ function loadGame(newMinefield, newTimeBeg)
 {
    Object.assign(minefield, newMinefield);
 
-   BOARD[0].setMinefield(minefield.rows, minefield.cols);
+   createMinefieldUI(BOARD[0], minefield.rows, minefield.cols);
 
    resizeBoard();
    setBoard();
@@ -589,6 +546,32 @@ function loadGame(newMinefield, newTimeBeg)
    updateTime();
 };
 
+
+function createMinefieldUI(tableEl, rows, cols, reset=true)
+{
+   if (reset) tableEl.innerHTML = "";
+
+   const DEFTD = document.createElement("td");
+   DEFTD.className = "close border1";
+   DEFTD.appendChild(document.createElement("div"));
+
+   for (let i=0; i<rows; i++)
+   {
+      const TR = document.createElement("tr");
+      tableEl.appendChild(TR);
+
+      for (let j=0; j<cols; j++)
+      {
+         const TD = DEFTD.cloneNode(true);
+
+         TD.id = i*cols+j;
+         
+         TR.appendChild(TD);
+      }
+   }
+
+   return 0;
+};
 
 function setBoard()
 {
@@ -645,18 +628,18 @@ function setFlag(cellobj, anim=true)
 
    flag.innerText = "🚩";
 
-   if (anim) flag.animateWith("flagin", 0.1);
+   if (anim) animate(flag, "flagin", 0.1);
 };
 function removeFlag(cellobj)
 {
    const flag = cellobj.find("div")[0];
 
-   flag.animateWith("flagout", 0.04, "ease-out", 1, true, () => 
+   animate(flag, "flagout", 0.04, {callback: () =>
    {
       flag.innerText = "";
       flag.style.paddingRight = "0px";
       flag.style.paddingBottom = "0px";
-   });
+   }});
 };
 
 
@@ -742,6 +725,24 @@ function secsToday()
 };
 
 
+function animate(el, name, seconds=1, {mode="ease-in-out", repetitions=1, reset=true, callback=null} = {})
+{
+   if (reset && el.style.animationName === name)
+   {
+      el.style.animation = "none";
+      el.offsetHeight;
+      el.style.animation = "none";
+   }
+
+   el.style.animation = `${name} ${seconds}s ${mode} ${repetitions}`;
+   
+   el.addEventListener("animationend", function()
+   {
+      el.style.animation = "none";
+      callback?.();
+   }, {once: true});
+};
+
 function debug(text, id="debugText")
 {
    text = JSON.stringify(text);
@@ -756,4 +757,16 @@ function debug(text, id="debugText")
    }
 
    else document.getElementById(id).innerText = text;
+};
+function perf(fun, log=true)
+{
+   const BEG = performance.now();
+
+   fun?.();
+   
+   const END = performance.now();
+
+   if (log) console.log(`perf: ${END-BEG}`);
+   
+   return END - BEG;
 };
