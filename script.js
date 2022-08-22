@@ -12,10 +12,10 @@ const TIME = $("#time")[0];
 
 const SIZEBAR = $("#fieldsize");
 
-const CUSTOMROWS = $("#customrows");
-const CUSTOMROWSCOUNT = $("#customrowscount")[0];
-const CUSTOMCOLS = $("#customcols");
-const CUSTOMCOLSCOUNT = $("#customcolscount")[0];
+const CUSTOMWIDTH = $("#customwidth");
+const CUSTOMWIDTHCOUNT = $("#customwidthcount")[0];
+const CUSTOMHEIGHT = $("#customheight");
+const CUSTOMHEIGHTCOUNT = $("#customheightcount")[0];
 
 const GAMEOVER = $("#gameover")[0];
 const LOSETEXT = $("#losetext")[0];
@@ -31,14 +31,24 @@ let time = {beg: null, manage: null};
 startGame(false);
 resizeBoard();
 
+/*
+let ms;
+while (minefield.isLost() == false) //minefield.getCellArray().filter(x => x.isOpen).length <= 1//
+{
+   minefield = new Minefield(10, 10);
+   ms = perf(()=>minefield.isSolvableFrom(75, false));
+}
+setBoard();
+console.log(`perf: ${ms}ms`)
+*/
 
-//while (minefield.isCleared() == false) //minefield.getCellArray().filter(x => x.isOpen).length <= 1//
-//{
-//   minefield = new Minefield(10, 10);
-//   minefield.isSolvableFrom(45, false);
-//}
-//setBoard();
+/*
+let b = minefield.toMinefield2D();
+b.visualDebug(true)
 
+console.log(JSON.stringify(b.getEmptyZone(6, 0, false)))
+setBoard();
+*/
 
 
 SMILE.on("mousedown", function()
@@ -55,9 +65,8 @@ SMILE.on("mousedown", function()
       {
          SMILE.off("mouseleave");
 
-         minefield = new Minefield(minefield.rows, minefield.cols);
-         startGame();
-         resizeBoard();
+         minefield = new Minefield(minefield.width, minefield.height);
+         startGame(true, false);
       }
       else if (window.event.type == "mouseout") SMILE.off("mouseup");
 
@@ -116,26 +125,26 @@ BOARD.on("mousedown", "td", function()
             
             if (minefield.isNew())
             {
-               if (SOLVABLE[0].checked)
+               if (SOLVABLE[0].checked && minefield.isSolvableFrom(cell) == false)
                {
                   BLOCKER.style.display = "inline";
                   LOADER.style.display = "inline";
 
                   let findSolvableGameID = setInterval(() =>
                   {
-                     let newMinefield = new Minefield(minefield.rows, minefield.cols);
+                     let newMinefield = new Minefield(minefield.width, minefield.height);
 
                      if (newMinefield.isSolvableFrom(cell))
                      {
                         Object.assign(minefield, newMinefield);
 
-                        time.beg = secsToday();
-                        time.manage = setInterval(() => updateTime(), 1000);
-            
                         BLOCKER.style.display = "none";
                         LOADER.style.display = "none";
-            
+
                         for (let cellnum of minefield.openCell(cell, true)) setCell(cellnum);
+
+                        time.beg = secsToday();
+                        time.manage = setInterval(() => updateTime(), 1000);
             
                         BOARD[0].style.cursor = "default";
             
@@ -145,7 +154,6 @@ BOARD.on("mousedown", "td", function()
                      }
                   }, 0);
                }
-
                else
                {
                   for (let cellnum of minefield.openCell(cell, true)) setCell(cellnum);
@@ -170,7 +178,7 @@ BOARD.on("mousedown", "td", function()
          SMILE[0].innerText = "🙂";
          BOARD[0].style.cursor = "default";
 
-         checkGameOver()
+         checkGameOver();
       });
    }
 });
@@ -301,25 +309,25 @@ $("#fullscreen").on("mousedown", function()
          
          let windowSize = Math.min(window.innerHeight, window.innerWidth);
 
-         let boardMinHeight = minefield.rows*32;
-         let boardMinWidth  = minefield.cols*32;
+         let boardMinWidth  = minefield.width*32;
+         let boardMinHeight = minefield.height*32;
 
 
          if (windowSize < boardMinHeight || windowSize < boardMinWidth)
          {
-            BOARD[0].style.height = boardMinHeight + "px";
             BOARD[0].style.width  = boardMinWidth  + "px";
+            BOARD[0].style.height = boardMinHeight + "px";
          }
          else if (windowSize > boardMinHeight*2 || windowSize > boardMinWidth*2)
          {
-            BOARD[0].style.height = boardMinHeight*2 + "px";
             BOARD[0].style.width  = boardMinWidth*2  + "px";
+            BOARD[0].style.height = boardMinHeight*2 + "px";
          }
          else
          {
             let border = BOARD.outerWidth() - BOARD.innerWidth();
-            BOARD[0].style.height = windowSize - border + "px";
             BOARD[0].style.width  = windowSize - border + "px";
+            BOARD[0].style.height = windowSize - border + "px";
          }
 
          resizeSync();
@@ -392,9 +400,8 @@ $("#nightmode").on("mousedown", function()
 
 RESTART.on("click", function()
 {
-   minefield = new Minefield(minefield.rows, minefield.cols);
-   startGame();
-   resizeBoard();
+   minefield = new Minefield(minefield.width, minefield.height);
+   startGame(true, false);
 });
 
 SIZEBAR.on("mousedown", function()
@@ -409,29 +416,34 @@ SIZEBAR.on("mousedown", function()
    }
    function setCustomCount()
    {
-      CUSTOMROWS[0].value = CUSTOMCOLS[0].value = SIZEBAR[0].value;
-      CUSTOMROWSCOUNT.value = CUSTOMCOLSCOUNT.value = SIZEBAR[0].value;
+      CUSTOMWIDTH[0].value = CUSTOMHEIGHT[0].value = SIZEBAR[0].value;
+      CUSTOMWIDTHCOUNT.value = CUSTOMHEIGHTCOUNT.value = SIZEBAR[0].value;
    }
 
    setSizeCount();
 
    SIZECOUNT.style.display = "inline";
 
-   let countManage = function()
+   function countManage(locked=true)
    {
+      if (SIZEBAR[0].value <= 32 || locked == false)
+      {
+         minefield = new Minefield(+SIZEBAR[0].value, +SIZEBAR[0].value);
+         
+         startGame();
+         resizeBoard();
+      }
+
       setSizeCount();
       setCustomCount();
-      
-      minefield = new Minefield(+SIZEBAR[0].value, +SIZEBAR[0].value);
-      
-      startGame();
-      resizeBoard();
    }
 
    SIZEBAR.on("input", countManage);
 
    $(window).on("mouseup", function()
    {
+      if (SIZEBAR[0].value > 32) countManage(false);
+
       SIZECOUNT.style.display = "none";
       
       SIZEBAR.off("input")
@@ -457,20 +469,21 @@ $("#customfieldsizeexpand").on("click", function()
       animate(CUSTOMSIZECONT, "left", 0.2, {mode: "reverse", callback: () => CUSTOMSIZECONT.style.right = "-300px"});
    }
 });
-CUSTOMROWS.on("input", function()
-{
-   CUSTOMROWSCOUNT.value = CUSTOMROWS[0].value;
 
-   minefield = new Minefield(+CUSTOMROWS[0].value, +CUSTOMCOLS[0].value);
+CUSTOMWIDTH.on("input", function()
+{
+   CUSTOMWIDTHCOUNT.value = CUSTOMWIDTH[0].value;
+
+   minefield = new Minefield(+CUSTOMWIDTH[0].value, +CUSTOMHEIGHT[0].value);
 
    startGame();
    resizeBoard();
 });
-CUSTOMCOLS.on("input", function()
+CUSTOMHEIGHT.on("input", function()
 {
-   CUSTOMCOLSCOUNT.value = CUSTOMCOLS[0].value;
+   CUSTOMHEIGHTCOUNT.value = CUSTOMHEIGHT[0].value;
 
-   minefield = new Minefield(+CUSTOMROWS[0].value, +CUSTOMCOLS[0].value);
+   minefield = new Minefield(+CUSTOMWIDTH[0].value, +CUSTOMHEIGHT[0].value);
 
    startGame();
    resizeBoard();
@@ -487,9 +500,9 @@ $(window).on("unload", function()
       localStorage.setItem("time", secsToday() - time.beg);
    }
 });
-$(window).on("load", function() ///
+$(window).on("load", function()
 {
-   if (localStorage.getItem("minefield") != null && 0)
+   if (localStorage.getItem("minefield") != null)
    {
       let newMinefield = JSON.parse(localStorage.getItem("minefield"));
       let newTime = secsToday() - localStorage.getItem("time");
@@ -499,13 +512,11 @@ $(window).on("load", function() ///
       localStorage.removeItem("minefield");
       localStorage.removeItem("time");
    }
-
-   $("#cover")[0].style.display = "none";
 });
 
 
 
-function startGame(anim=true)
+function startGame(anim=true, ui=true)
 {
    FLAGSLEFT.innerText = minefield.mines;
    SMILE[0].innerText = "🙂";
@@ -518,7 +529,8 @@ function startGame(anim=true)
    
    if (anim) animate(BOARD[0], "bounce", 0.1);
    
-   createMinefieldUI(BOARD[0], minefield.rows, minefield.cols);
+   if (ui) createMinefieldUI(BOARD[0], minefield.width, minefield.height);
+   else setBoard();
    
    clearInterval(time.manage);
 };
@@ -526,7 +538,7 @@ function loadGame(newMinefield, newTimeBeg)
 {
    Object.assign(minefield, newMinefield);
 
-   createMinefieldUI(BOARD[0], minefield.rows, minefield.cols);
+   createMinefieldUI(BOARD[0], minefield.width, minefield.height);
 
    resizeBoard();
    setBoard();
@@ -541,13 +553,13 @@ function loadGame(newMinefield, newTimeBeg)
    WINTEXT.style.display = "none";
    RESTART[0].style.display = "none";
 
-   SIZEBAR[0].value = minefield.rows;
+   SIZEBAR[0].value = minefield.height;
 
    updateTime();
 };
 
 
-function createMinefieldUI(tableEl, rows, cols, reset=true)
+function createMinefieldUI(tableEl, width, height, reset=true)
 {
    if (reset) tableEl.innerHTML = "";
 
@@ -555,16 +567,16 @@ function createMinefieldUI(tableEl, rows, cols, reset=true)
    DEFTD.className = "close border1";
    DEFTD.appendChild(document.createElement("div"));
 
-   for (let i=0; i<rows; i++)
+   for (let i=0; i<height; i++)
    {
       const TR = document.createElement("tr");
       tableEl.appendChild(TR);
 
-      for (let j=0; j<cols; j++)
+      for (let j=0; j<width; j++)
       {
          const TD = DEFTD.cloneNode(true);
 
-         TD.id = i*cols+j;
+         TD.id = i*width+j;
          
          TR.appendChild(TD);
       }
@@ -573,11 +585,13 @@ function createMinefieldUI(tableEl, rows, cols, reset=true)
    return 0;
 };
 
+
 function setBoard()
 {
    for (let i=0; i<minefield.cells; i++)
    {
-      if (minefield[i].isOpen) setCell(i);
+      setCell(i);
+      
       if (minefield[i].isFlagged) setFlag($("#"+i), false);
    }
 
@@ -586,47 +600,54 @@ function setBoard()
 
 function setCell(cellnum)
 {
-   let cellobj = $(`#${cellnum}`);
+   const cellobj = $(`#${cellnum}`);
+   const DIV = cellobj.children("div")[0];
 
-   cellobj.removeClass("close border1");
-   cellobj.addClass("open");
-
-   const DIV = $(`#${cellnum} > div`)[0];
-
-   if (minefield[cellnum].isMine)
+   if (minefield[cellnum].isOpen)
    {
-      DIV.innerText = "💥";
-      DIV.style.paddingRight = "calc(20px - 40%)";
-      DIV.style.paddingBottom = "10%";
-   }
-   else if (minefield[cellnum].mines != 0)
-   {
-      DIV.innerText = minefield[cellnum].mines;
-      DIV.style.marginTop = "2px";
+      cellobj.removeClass("close border1");
+      cellobj.addClass("open");
 
-      switch (minefield[cellnum].mines)
+      if (minefield[cellnum].isMine)
       {
-         case 1: DIV.style.color = "blue"    ; break;
-         case 2: DIV.style.color = "green"   ; break;
-         case 3: DIV.style.color = "red"     ; break;
-         case 4: DIV.style.color = "darkblue"; break;
-         case 5: DIV.style.color = "brown"   ; break;
-         case 6: DIV.style.color = "darkcyan"; break;
-         case 7: DIV.style.color = "black"   ; break;
-         case 8: DIV.style.color = "gray"    ; break;
+         DIV.innerText = "💥";
+         DIV.style.paddingRight = "calc(20px - 40%)";
+         DIV.style.paddingBottom = "10%";
+      }
+      else if (minefield[cellnum].mines != 0)
+      {
+         DIV.innerText = minefield[cellnum].mines;
+         DIV.style.paddingRight = "0px";
+         DIV.style.paddingBottom = "0px";
+         DIV.style.marginTop = "2px";
+   
+         switch (minefield[cellnum].mines)
+         {
+            case 1: DIV.style.color = "blue"    ; break;
+            case 2: DIV.style.color = "green"   ; break;
+            case 3: DIV.style.color = "red"     ; break;
+            case 4: DIV.style.color = "darkblue"; break;
+            case 5: DIV.style.color = "brown"   ; break;
+            case 6: DIV.style.color = "darkcyan"; break;
+            case 7: DIV.style.color = "black"   ; break;
+            case 8: DIV.style.color = "gray"    ; break;
+         }
       }
    }
-
-   cellobj.append(DIV);
+   else
+   {
+      cellobj[0].className = "close border1";
+      DIV.innerHTML = "";
+   }
 };
 function setFlag(cellobj, anim=true)
 {
    const flag = cellobj.find("div")[0];
 
+   flag.innerText = "🚩";
+
    flag.style.paddingRight = "calc(20px - 40%)";
    flag.style.paddingBottom = "10%";
-
-   flag.innerText = "🚩";
 
    if (anim) animate(flag, "flagin", 0.1);
 };
@@ -664,9 +685,9 @@ function resizeBoard()
    };
 
    let sizeMultiplier = getSizeMultiplier();
-
-   let boardMinWidth  = minefield.cols*32;
-   let boardMinHeight = minefield.rows*32;
+   
+   let boardMinWidth  = minefield.width*32;
+   let boardMinHeight = minefield.height*32;
 
    BOARD[0].style.width  = boardMinWidth  * sizeMultiplier + "px";
    BOARD[0].style.height = boardMinHeight * sizeMultiplier + "px";
@@ -697,7 +718,7 @@ function resizeSync()
    const TD = document.querySelector("td");
    let minSize = Math.min(TD.offsetWidth, TD.offsetHeight);
 
-   setCSSvar("TDfontSize", (minSize*50)**0.45 + "px");
+   setCSSvar("TDfontSize", (minSize*25)**0.5 + "px");
 };
 
 
@@ -760,13 +781,14 @@ function debug(text, id="debugText")
 };
 function perf(fun, log=true)
 {
+   let RES;
    const BEG = performance.now();
 
-   fun?.();
+   RES = fun?.();
    
    const END = performance.now();
 
-   if (log) console.log(`perf: ${END-BEG}`);
+   if (log) console.log(`perf: ${END-BEG}\nresult: ${RES ?? "none"}`);
    
    return END - BEG;
 };

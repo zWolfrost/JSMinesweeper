@@ -488,7 +488,7 @@ td > div
 
    cursor: pointer;
 }
-#customrowspan
+#customwidthspan
 {
    position: absolute;
 
@@ -502,7 +502,7 @@ td > div
    left: 95px;
    top: 14px;
 }
-#customrowscount
+#customwidthcount
 {
    position: absolute;
 
@@ -518,7 +518,7 @@ td > div
    left: 160px;
    top: 10px;
 }
-#customrows
+#customwidth
 {
    position: absolute;
    
@@ -527,7 +527,7 @@ td > div
    left: 12px;
    top: 45px;
 }
-#customrowcolumns
+#customheightspan
 {
    position: absolute;
 
@@ -541,7 +541,7 @@ td > div
    left: 80px;
    top: 84px;
 }
-#customcolscount
+#customheightcount
 {
    position: absolute;
 
@@ -557,7 +557,7 @@ td > div
    left: 174px;
    top: 80px;
 }
-#customcols
+#customheight
 {
    position: absolute;
    
@@ -622,17 +622,6 @@ td > div
 .range::-webkit-slider-thumb:active {background: var(--shade-4);}
 
 
-.cover
-{
-   position: fixed;
-   height: 100%;
-   width: 100%;
-   top: 0;
-   left: 0;
-   z-index: 10;
-
-   background: white;
-}
 .blocker
 {
    display: none;

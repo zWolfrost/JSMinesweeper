@@ -19,7 +19,6 @@
 
    <body>
 
-      <div id="cover" class="cover"></div>
       <div id="blocker" class="blocker"></div>
       <div id="loader" class="loader"></div>
       
@@ -54,27 +53,27 @@
       <br>
 
       <div id="fieldsizecontainer" class="border1">
-         <input type="range" id="fieldsize" class="range" min="4" max="45" value="10">
+         <input type="range" id="fieldsize" class="range" min="4" max="60" value="10">
          <span id="fieldsizecount">34</span>
       </div>
 
       <div id="customfieldsizecontainer" class="border1">
          <div id="customfieldsizeexpand" class="border1 fa-solid fa-chevron-left"></div>
 
-         <label id="customrowspan">Rows:</label>
-         <input id="customrowscount" size="10" readonly value="10">
-         <input type="range" id="customrows" class="range" min="4" max="45" value="10">
+         <label id="customwidthspan">Width:</label>
+         <input id="customwidthcount" size="10" readonly value="10">
+         <input type="range" id="customwidth" class="range" min="4" max="60" value="10">
 
-         <label id="customrowcolumns">Columns:</label>
-         <input id="customcolscount" size="10" readonly value="10">
-         <input type="range" id="customcols" class="range" min="4" max="45" value="10">
+         <label id="customheightspan">Height:</label>
+         <input id="customheightcount" size="10" readonly value="10">
+         <input type="range" id="customheight" class="range" min="4" max="60" value="10">
       </div>
 
       <br>
 
       <div>
          <input type="checkbox" id="createsolvablecheckbox" checked>
-         <label id="createsolvablelabel">Only create solvable games (experimental)</label>
+         <label id="createsolvablelabel">Only create solvable games</label>
       </div>
       
    </body>

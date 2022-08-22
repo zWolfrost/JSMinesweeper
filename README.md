@@ -6,6 +6,7 @@ Supports:
 - No-guessing game creation
 - Night mode
 - Custom field size chooser
+- Game Saving and Loading on leaving the page
 
 # Code
 Uses a [Minesweeper Library](https://github.com/zWolfrost/minesweeper.js) written by myself! Very recommended if you ever want to make something like this
