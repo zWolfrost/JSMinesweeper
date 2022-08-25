@@ -5,15 +5,13 @@
       <title>JS Minesweeper</title>
       <link rel="icon" href="assets/minesweeper.ico">
 
-      <link rel="stylesheet" href="style.css">
-
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
-      
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+      <link rel="stylesheet" href="libraries/jquery-ui.min.css">
 
-      <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css"/>
-      <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js" integrity="sha256-6XMVI0zB8cRzfZjqKcD01PBsAy3FlDASrlC8SxCpInY=" crossorigin="anonymous"></script>
-      
+      <script src="libraries/jquery-3.6.0.min.js"></script>
+      <script src="libraries/jquery-ui.min.js"></script>
+
+      <link rel="stylesheet" href="style.css">
       <script type="module" src="script.js" defer></script>
    </head>
 
@@ -21,7 +19,7 @@
 
       <div id="blocker" class="blocker"></div>
       <div id="loader" class="loader"></div>
-      
+
       <br>
 
       <div id="container" class="border1">
@@ -67,6 +65,10 @@
          <label id="customheightspan">Height:</label>
          <input id="customheightcount" size="10" readonly value="10">
          <input type="range" id="customheight" class="range" min="4" max="60" value="10">
+
+         <label id="customminesspan">Mines Multiplier:</label>
+         <input id="customminescount" size="10" readonly value="1x">
+         <input type="range" id="custommines" class="range" min="5" max="15" value="10">
       </div>
 
       <br>
@@ -75,6 +77,6 @@
          <input type="checkbox" id="createsolvablecheckbox" checked>
          <label id="createsolvablelabel">Only create solvable games</label>
       </div>
-      
+
    </body>
 </html>

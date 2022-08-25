@@ -11,7 +11,7 @@
    --shade-spec-1:#AAA;
    */
 
-   
+
    --shade-1:white;
    --shade-2:whitesmoke;
    --shade-3:lightgray;
@@ -20,8 +20,8 @@
    --shade-6:#555;
 
    --shade-spec-1: gray;
-   
-   
+
+
 
    --TDfontSize: 25px;
 
@@ -88,12 +88,6 @@ div
 }
 
 
-.ui-resizable-handle
-{
-   filter: brightness(80%);
-}
-
-
 .border1
 {
    border-top-color: var(--shade-2) !important;
@@ -134,7 +128,7 @@ div
    height: 80px;
 
    border: 6px solid;
-   
+
    background-color: var(--shade-3);
 
    user-select: none;
@@ -159,7 +153,7 @@ div
    color: red;
 
    border: 3px solid;
-   
+
    background-color: black;
 
    user-select: none;
@@ -179,7 +173,7 @@ div
    font-size: 40px;
 
    border: 6px solid;
-   
+
    background-color: var(--shade-3);
 
    user-select: none;
@@ -206,7 +200,7 @@ smile::after
    color: red;
 
    border: 3px solid;
-   
+
    background-color: black;
 
    user-select: none;
@@ -223,7 +217,7 @@ smile::after
    height: 100%;
 
    border: 6px solid;
-   
+
    background-color: var(--shade-5);
    border-collapse: separate;
    border-spacing: 0;
@@ -242,7 +236,7 @@ smile::after
 td
 {
    position: relative;
-   
+
    text-align: center;
    vertical-align: middle;
    user-select: none;
@@ -305,10 +299,10 @@ td > div
    padding-top: 50px;
    padding-bottom: 50px;
 
-   
+
    position: absolute;
    transform: translate(-50%, -50%);
-   
+
    top: calc(50%);
 
    z-index: 2;
@@ -324,7 +318,7 @@ td > div
    font-family: minesweeper;
    font-size: 20px;
    padding: 6px 14px;
-   
+
    border-radius: 6px;
    border: none;
 
@@ -343,7 +337,7 @@ td > div
    position: relative;
    width: 100%;
    height: 62px;
-   
+
    background-color: var(--shade-3);
 
    user-select: none;
@@ -435,7 +429,7 @@ td > div
 
    transform: rotate(270deg);
    transform-origin: bottom left;
-   
+
    width: 416px;
 
    left: 20.8px;
@@ -464,7 +458,7 @@ td > div
    right: -300px;
    z-index: 2;
 
-   height: 155px;
+   height: 225px;
    width: 300px;
 
    user-select: none;
@@ -475,13 +469,13 @@ td > div
    top: -6px;
    right: calc(100%);
 
-   line-height: 1.2;
+   line-height: 1.1;
 
    background: var(--shade-3);
    border: 6px solid;
    border-right: none;
 
-   height: 26px;
+   height: 27px;
    width: 26px;
 
    padding-right: 6px;
@@ -493,13 +487,13 @@ td > div
    position: absolute;
 
    font-family: Arial;
-   
+
    width: 24px;
-   
+
    font-size: 20px;
    text-align: center;
 
-   left: 95px;
+   left: 94px;
    top: 14px;
 }
 #customwidthcount
@@ -515,13 +509,13 @@ td > div
    font-size: 20px;
    text-align: center;
 
-   left: 160px;
+   left: 157px;
    top: 10px;
 }
 #customwidth
 {
    position: absolute;
-   
+
    width: 260px;
 
    left: 12px;
@@ -532,13 +526,13 @@ td > div
    position: absolute;
 
    font-family: Arial;
-   
+
    width: 24px;
-   
+
    font-size: 20px;
    text-align: center;
 
-   left: 80px;
+   left: 90px;
    top: 84px;
 }
 #customheightcount
@@ -550,21 +544,62 @@ td > div
 
    padding-top: 2px;
    padding-left: 2px;
-   
+
    font-size: 20px;
    text-align: center;
 
-   left: 174px;
+   left: 160px;
    top: 80px;
 }
 #customheight
 {
    position: absolute;
-   
+
    width: 260px;
-   
+
    left: 12px;
    top: 115px;
+}
+#customminesspan
+{
+   position: absolute;
+
+   font-family: Arial;
+
+   white-space: nowrap;
+
+   width: 24px;
+
+   font-size: 20px;
+   text-align: center;
+
+   left: 40px;
+   top: 149px;
+}
+#customminescount
+{
+   position: absolute;
+
+   width: 40px;
+   height: 24px;
+
+   padding-top: 2px;
+   padding-left: 2px;
+
+   font-size: 20px;
+   text-align: center;
+
+   left: 190px;
+   top: 145px;
+}
+#custommines
+{
+   position: absolute;
+
+   width: 260px;
+
+   left: 12px;
+   top: 180px;
 }
 @keyframes left
 {
@@ -580,7 +615,7 @@ td > div
    100% {transform: scale(1.2);}
 }
 @keyframes shake
-{ 
+{
    0% {transform: rotate(4deg);}
    25% {transform: rotate(-4deg);}
    50% {transform: rotate(2deg);}
@@ -595,13 +630,32 @@ td > div
 }
 
 
+.handle
+{
+   position: absolute;
+
+   width: 16px;
+   height: 16px;
+
+   padding: 4px;
+
+   bottom: 0;
+   right: 0;
+
+   cursor: nwse-resize;
+
+   background: url(https://raw.githubusercontent.com/RickStrahl/jquery-resizable/master/assets/wingrip.png) no-repeat;
+}
+
+
+
 .range
 {
    background-color: var(--shade-3);
 
    border-radius: 15px;
    box-shadow: inset 0 0 5px #000;
-   
+
    appearance: none;
    -webkit-appearance: none;
    overflow: hidden;
@@ -612,10 +666,10 @@ td > div
    -webkit-appearance: none;
    width: 15px;
    height: 15px;
-   
+
    border-radius: 50%;
    background: var(--shade-6);
-   
+
    cursor: pointer;
 }
 .range::-webkit-slider-thumb:hover {background: var(--shade-spec-1);}
@@ -625,7 +679,7 @@ td > div
 .blocker
 {
    display: none;
-   
+
    position: fixed;
    top: 0;
    left: 0;
@@ -652,7 +706,7 @@ td > div
    z-index: 21;
 
    filter: brightness(0%);
-   
+
    text-indent: -9999em;
    animation: loading 1.1s infinite ease;
    overflow: visible;

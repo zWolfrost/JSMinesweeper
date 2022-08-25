@@ -23,38 +23,36 @@ export default class Minefield
     */
    constructor(width, height, mines = Math.floor(width*height/5), randomizer = Math.random)
    {
-      function minefieldGetNearbyCells(minefield, cell)
+      let constructorGetNearbyCells = (cell) =>
       {
-         cell = validateNumber(cell, 0, minefield.cells-1);
-         
          let nearbyCells = [cell];
-   
-         let x = cell % minefield.width;
-         let y = Math.floor(cell / minefield.width);
-   
-         let isNotFirstRow = y > 0;
-         let isNotLastRow = y < minefield.height-1;
-   
 
-         if (isNotFirstRow) nearbyCells.push(cell-minefield.width);      //up
-         if (isNotLastRow ) nearbyCells.push(cell+minefield.width);      //down
-   
+         let x = cell % this.width;
+         let y = Math.floor(cell / this.width);
+
+         let isNotFirstRow = y > 0;
+         let isNotLastRow = y < this.height-1;
+
+
+         if (isNotFirstRow) nearbyCells.push(cell-this.width);      //up
+         if (isNotLastRow ) nearbyCells.push(cell+this.width);      //down
+
          if (x > 0) //if cell isn't on first column
          {
             nearbyCells.push(cell-1);                                    //left
-   
-            if (isNotFirstRow) nearbyCells.push(cell-minefield.width-1); //up left
-            if (isNotLastRow ) nearbyCells.push(cell+minefield.width-1); //down left
+
+            if (isNotFirstRow) nearbyCells.push(cell-this.width-1); //up left
+            if (isNotLastRow ) nearbyCells.push(cell+this.width-1); //down left
          }
-   
-         if (x < minefield.width-1) //if cell isn't on last column
+
+         if (x < this.width-1) //if cell isn't on last column
          {
             nearbyCells.push(cell+1);                                    //right
-            
-            if (isNotFirstRow) nearbyCells.push(cell-minefield.width+1); //up right
-            if (isNotLastRow ) nearbyCells.push(cell+minefield.width+1); //down right
+
+            if (isNotFirstRow) nearbyCells.push(cell-this.width+1); //up right
+            if (isNotLastRow ) nearbyCells.push(cell+this.width+1); //down right
          }
-   
+
          return nearbyCells;
       }
 
@@ -66,19 +64,19 @@ export default class Minefield
       {
          //assign properties to minefield
          Object.assign(this, {width: width, height: height, cells: cells, mines: mines.length});
-         
+
          //assign properties to cells and add mines
          for (let i=0; i<cells; i++)
          {
             this[i] = {mines: 0, isMine: false, isOpen: false, isFlagged: false};
          }
-   
+
          //assign mines to cells and high up the cells' nearby mines number by one
          for (let i=0; i<mines.length; i++)
          {
             this[mines[i]].isMine = true;
-            
-            let nearbyCells = minefieldGetNearbyCells(this, mines[i]);
+
+            let nearbyCells = constructorGetNearbyCells(mines[i]);
 
             for (let j=0; j<nearbyCells.length; j++)
             {
@@ -92,13 +90,13 @@ export default class Minefield
 
          //assign properties to minefield
          Object.assign(this, {width: width, height: height, cells: cells, mines: mines});
-         
+
          //assign properties to cells and add mines
          for (let i=0; i<cells; i++)
          {
             this[i] = {mines: 0, isMine: i < mines, isOpen: false, isFlagged: false};
          }
-   
+
          //Knuth-Fisher-Yates shuffle algorithm
          for (let i=cells-1; i > 0; i--)
          {
@@ -111,7 +109,7 @@ export default class Minefield
          {
             if (this[i].isMine)
             {
-               let nearbyCells = minefieldGetNearbyCells(this, i);
+               let nearbyCells = constructorGetNearbyCells(i);
 
                for (let j=0; j<nearbyCells.length; j++)
                {
@@ -127,7 +125,7 @@ export default class Minefield
 
    /**
     * Converts the Minefield object to a Minefield2D object.
-    * 
+    *
     * WARNING! The two objects will share the same reference to the same cells so any changes made to one will be reflected in the other
     * @returns {Minefield2D} A Minefield2D object
     */
@@ -150,14 +148,16 @@ export default class Minefield
 
    /**
     * Opens a given cell and may open nearby ones following the minesweeper game rules.
-    * 
-    * Can also give the index of an already open cell that matches its nearby mines number with its nearby flags to automatically open all of its nearby not-flagged cells 
+    * @example
+    * minefield.openCell(20, false, {nearbyOpening: true, nearbyFlagging: false});
     * @param {Number} cell The index of the cell to open
     * @param {Boolean} firstclick If true, and a bomb is opened, it will be moved in another cell starting from 0 (default: {@link isNew()})
+    * @param {Boolean} nearbyOpening Enables the opening of nearby cells if the given cell is already open and its nearby mines number matches the number of nearby flagged cells (default: true)
+    * @param {Boolean} nearbyFlagging Enables the flagging of nearby cells if the given cell is already open and its nearby mines number matches the number of nearby closed cells (default: true)
     * @returns {Array.<number>} An array containing the indexes of the updated cells
     * @throws {Error} If parameters are invalid
     */
-   openCell(cell, firstclick=this.isNew())
+   openCell(cell, firstclick=this.isNew(), {nearbyOpening=true, nearbyFlagging=true} = {})
    {
       cell = validateNumber(cell, 0, this.cells-1);
 
@@ -193,52 +193,62 @@ export default class Minefield
                      break;
                   }
                }
-   
+
                this.resetMines();
-   
+
                openIfEmptyZone(cell);
             }
          }
 
          else openIfEmptyZone(cell);
       }
-      else if (this[cell].mines != 0)
+      else if (this[cell].mines != 0 && (nearbyOpening || nearbyFlagging))
       {
          let nearbyCells = this.getNearbyCells(cell);
-         let flagCount = 0;
+         let closedCells = 0, flaggedCells = 0, unflaggedCells = [];
 
-         for (let i=0; i<nearbyCells.length; i++)
+         for (let j=0; j<nearbyCells.length; j++)
          {
-            if (this[nearbyCells[i]].isFlagged)
+            if (this[nearbyCells[j]].isOpen == false)
             {
-               flagCount++;
+               closedCells++;
+
+               if (this[nearbyCells[j]].isFlagged) flaggedCells++;
+               else unflaggedCells.push(nearbyCells[j]);
             }
          }
-         
-         if (flagCount == this[cell].mines)
-         {
-            for (let i=0; i<nearbyCells.length; i++)
-            {
-               if (this[nearbyCells[i]].isFlagged == false && this[nearbyCells[i]].isOpen == false)
-               {
-                  this[nearbyCells[i]].isOpen = true;
-                  updatedCells.push(nearbyCells[i]);
 
-                  if (this[nearbyCells[i]].isMine == false)
-                  {
-                     openIfEmptyZone(nearbyCells[i]);
-                  }
+         if (this[cell].mines == flaggedCells && nearbyOpening)
+         {
+            for (let i=0; i<unflaggedCells.length; i++)
+            {
+               this[unflaggedCells[i]].isOpen = true;
+               updatedCells.push(unflaggedCells[i]);
+
+               if (this[unflaggedCells[i]].isMine == false)
+               {
+                  openIfEmptyZone(unflaggedCells[i]);
                }
             }
          }
+         else if (this[cell].mines == closedCells && nearbyFlagging)
+         {
+            for (let i=0; i<unflaggedCells.length; i++)
+            {
+               this[unflaggedCells[i]].isFlagged = true;
+               updatedCells.push(unflaggedCells[i]);
+            }
+         }
       }
+
+      if (updatedCells.length >= 2 && updatedCells[0] == updatedCells[1]) updatedCells.shift();
 
       return updatedCells;
    }
 
    /**
     * Checks if a minefield is solvable from a given cell (by not guessing)
-    * 
+    *
     * WARNING! This method gets resource-intensive the more the minefield is big.
     * @param {Number} cell The index of the cell where to start
     * @param {Boolean} restore If true, the Minefield will be restored after the function ends (default: true)
@@ -246,7 +256,7 @@ export default class Minefield
     * @throws {Error} If parameters are invalid
     */
    isSolvableFrom(cell, restore=true)
-   { 
+   {
       cell = validateNumber(cell, 0, this.cells-1);
 
       let matrixIncludesArr = (matrix, arr) => JSON.stringify(matrix).includes(JSON.stringify(arr));
@@ -259,7 +269,7 @@ export default class Minefield
       }
 
       let updates = true;
-      
+
       while (updates)
       {
          let phantomGroups = [];
@@ -272,7 +282,7 @@ export default class Minefield
             if (this[i].isOpen == false && this[i].isFlagged == false)
             {
                let nearbyCells = this.getNearbyCells(i);
-               
+
                for (let j=0; j<nearbyCells.length; j++)
                {
                   if (this[nearbyCells[j]].isOpen == true)
@@ -285,7 +295,7 @@ export default class Minefield
 
          importantCells = [...new Set(importantCells)];
 
-         
+
          for (let i of importantCells) //1st try: open cells using flags
          {
             if (this[i].mines == 0) //all nearby cells are fine
@@ -304,9 +314,9 @@ export default class Minefield
             else
             {
                let nearbyCells = this.getNearbyCells(i);
-      
+
                let closedCells = 0, flaggedCells = 0, unflaggedCells = [];
-      
+
                for (let j=0; j<nearbyCells.length; j++)
                {
                   if (this[nearbyCells[j]].isOpen == false)
@@ -317,7 +327,7 @@ export default class Minefield
                      else unflaggedCells.push(nearbyCells[j]);
                   }
                }
-      
+
                if (unflaggedCells.length > 0)
                {
                   if (this[i].mines == flaggedCells) //all nearby cells are fine (except for the flagged cells) > open them
@@ -325,17 +335,17 @@ export default class Minefield
                      unflaggedCells.forEach(x => this[x].isOpen = true);
                      updates = true
                   }
-      
+
                   if (this[i].mines == closedCells) //all nearby closed cells are mines > flag them all
                   {
                      unflaggedCells.forEach(x => this[x].isFlagged = true);
                      updates = true;
                   }
-      
+
                   if (this[i].mines > flaggedCells) //all nearby not flagged cells have some mines > phantom flagging
                   {
                      let tempPhantomGroup = [this[i].mines - flaggedCells, ...unflaggedCells.sort((a, b) => a - b)];
-                     
+
                      if (matrixIncludesArr(phantomGroups, tempPhantomGroup) == false) phantomGroups.push(tempPhantomGroup);
                   }
                }
@@ -354,7 +364,7 @@ export default class Minefield
                {
                   let nearbyCells = this.getNearbyCells(i);
                   let phantomGroupSum = [0];
-                  
+
                   let closedCells = [];
                   let flaggedCells = 0;
 
@@ -363,7 +373,7 @@ export default class Minefield
                      if (this[nearbyCells[k]].isFlagged) flaggedCells++;
                      else if (this[nearbyCells[k]].isOpen == false) closedCells.push(nearbyCells[k]);
                   }
-                  
+
                   for (let j=0; j < phantomGroups.length; j++)
                   {
                      if (phantomGroups[j].slice(1).every(x => closedCells.includes(x)) && closedCells.length != phantomGroups[j].length-1)
@@ -421,7 +431,7 @@ export default class Minefield
                      let phantomGroupUncontainedCells = phantomGroups[j].slice(1).filter(x => nearbyCells.includes(x) == false).length;
 
                      let flaggedCells = 0, unknownCells = [];
-   
+
                      for (let k=0; k < nearbyCells.length; k++)
                      {
                         if (this[nearbyCells[k]].isFlagged) flaggedCells++;
@@ -430,7 +440,7 @@ export default class Minefield
                            unknownCells.push(nearbyCells[k]);
                         }
                      }
-   
+
                      if (unknownCells.length > 0)
                      {
                         if (this[i].mines == flaggedCells + phantomGroups[j][0] + unknownCells.length) //all unknown cells are mines > flag them all
@@ -471,7 +481,7 @@ export default class Minefield
             {
                phantomGroups.sort((a, b) => a.length - b.length)
                let remainingPhantomGroups = [0];
-         
+
                for (let i=0; i<phantomGroups.length; i++)
                {
                   if (phantomGroups[i].slice(1).some(x => JSON.stringify(remainingPhantomGroups.slice(1)).includes(x)) == false)
@@ -480,7 +490,7 @@ export default class Minefield
                      remainingPhantomGroups.push(...phantomGroups[i].slice(1));
                   }
                }
-         
+
                if (remainingPhantomGroups[0] == this.mines - this.usedFlags)
                {
                   for (let i=0; i < this.cells; i++)
@@ -495,7 +505,7 @@ export default class Minefield
             }
          }
       }
-      
+
       let isSolvable = false;
       if (this.isCleared()) isSolvable = true;
 
@@ -533,7 +543,7 @@ export default class Minefield
          if (this[i].isOpen == false && this[i].isFlagged == false)
          {
             let nearbyCells = this.getNearbyCells(i);
-            
+
             for (let j=0; j<nearbyCells.length; j++)
             {
                if (this[nearbyCells[j]].isOpen == true)
@@ -565,9 +575,9 @@ export default class Minefield
             else
             {
                let nearbyCells = this.getNearbyCells(i);
-      
+
                let closedCells = 0, flaggedCells = 0, unflaggedCells = [];
-      
+
                for (let j=0; j<nearbyCells.length; j++)
                {
                   if (this[nearbyCells[j]].isOpen == false)
@@ -578,7 +588,7 @@ export default class Minefield
                      else unflaggedCells.push(nearbyCells[j]);
                   }
                }
-      
+
                if (unflaggedCells.length > 0)
                {
                   if (this[i].mines == flaggedCells) //all nearby cells are fine (except for the flagged cells) > open them
@@ -586,17 +596,17 @@ export default class Minefield
                      hintCells.push(["O", ...nearbyCells, i])
                      accurateHintCells.push(["O", ...unflaggedCells]);
                   }
-      
+
                   if (this[i].mines == closedCells) //all nearby closed cells are mines > flag them all
                   {
                      hintCells.push(["F", ...nearbyCells, i])
                      accurateHintCells.push(["F", ...unflaggedCells]);
                   }
-      
+
                   if (this[i].mines > flaggedCells) //all nearby not flagged cells have some mines > phantom flagging
                   {
                      let tempPhantomGroup = [this[i].mines - flaggedCells, ...unflaggedCells.sort((a, b) => a - b)];
-                     
+
                      if (matrixIncludesArr(phantomGroups, tempPhantomGroup) == false) phantomGroups.push(tempPhantomGroup);
                   }
                }
@@ -613,7 +623,7 @@ export default class Minefield
          {
             let nearbyCells = this.getNearbyCells(i);
             let phantomGroupSum = [0];
-            
+
             let closedCells = [];
             let flaggedCells = 0;
 
@@ -622,7 +632,7 @@ export default class Minefield
                if (this[nearbyCells[k]].isFlagged) flaggedCells++;
                else if (this[nearbyCells[k]].isOpen == false) closedCells.push(nearbyCells[k]);
             }
-            
+
             for (let j=0; j < phantomGroups.length; j++)
             {
                if (phantomGroups[j].slice(1).every(x => closedCells.includes(x)) && closedCells.length != phantomGroups[j].length-1)
@@ -737,7 +747,7 @@ export default class Minefield
       {
          phantomGroups.sort((a, b) => a.length - b.length)
          let remainingPhantomGroups = [0];
-   
+
          for (let i=0; i<phantomGroups.length; i++)
          {
             if (phantomGroups[i].slice(1).some(x => JSON.stringify(remainingPhantomGroups.slice(1)).includes(x)) == false)
@@ -746,7 +756,7 @@ export default class Minefield
                remainingPhantomGroups.push(...phantomGroups[i].slice(1));
             }
          }
-   
+
          if (remainingPhantomGroups[0] == this.mines - this.usedFlags)
          {
             let safeCells = [];
@@ -796,13 +806,22 @@ export default class Minefield
 
 
    /**
-    * @returns {Array.<object>} An Array containing only the cells of the Minefield object
+    * Executes a given function for every cell (passing them as parameters along with the corresponding index, like a forEach)
+    * @param {Function} fun A function to execute for each cell
+    * @returns {any} The loop stops whenever the function returns a value that is not undefined and returns that value
     */
-   getCellArray()
+   forEachCell(fun)
    {
-      return Object.values(this).slice(0, this.cells);
+      for (let i=0; i<this.cells; i++)
+      {
+         let res = fun(this[i], i);
+         if (res !== undefined) return res;
+      }
+
+      return undefined;
    }
    /**
+    * Finds the coordinates of the nearby cell at the given index
     * @param {Number} cell The index of the concerned cell
     * @param {Boolean} includeSelf If true, also include the index of the concerned cell (default: false)
     * @returns {Array.<number>} An Array containing the indexes of the cells directly around the given one
@@ -811,7 +830,7 @@ export default class Minefield
    getNearbyCells(cell, includeSelf=false)
    {
       cell = validateNumber(cell, 0, this.cells-1);
-      
+
       let nearbyCells = [];
 
       let x = cell % this.width;
@@ -837,7 +856,7 @@ export default class Minefield
       if (x < this.width-1) //if cell isn't on last column
       {
          nearbyCells.push(cell+1);                              //right
-         
+
          if (isNotFirstRow) nearbyCells.push(cell-this.width+1); //up right
          if (isNotLastRow ) nearbyCells.push(cell+this.width+1); //down right
       }
@@ -847,112 +866,84 @@ export default class Minefield
    /**
     * Uses a flood fill algorithm to find all the cells that have 0 mines nearby
     * @param {Number} cell The index of the concerned cell
-    * @param {Boolean} includeFlags If true, the flagged cells will be included in the empty zone (default: false)
+    * @param {Boolean} includeFlags Whether to include flagged cells in the empty zone (default: false)
     * @returns {Array.<number>} An Array containing the indexes of the empty cells zone starting from the given one
     * @throws {Error} If parameters are invalid
     */
    getEmptyZone(cell, includeFlags=false)
    {
-      const widthIndex = this.width;
-      const startMines = 0;
+      if (this[cell].mines != 0) return [];
 
-      if (this[cell].mines != startMines) return [];
-
-      let fullStack = new Set();
-      let topStack = [cell];
-
-      while(topStack.length)
-      {
-         let curCell = topStack.pop();
-
-         while(curCell >= 0 && this[curCell].mines == startMines)
-         {
-            curCell -= widthIndex;
-         }
-
-         curCell += widthIndex;
-
-         let reachLeft = false;
-         let reachRight = false;
-
-         while (curCell < this.cells && this[curCell].mines == startMines)
-         {
-            fullStack.add(curCell);
-
-            if (curCell % widthIndex > 0)
-            {
-               if (this[curCell-1].mines == startMines && fullStack.has(curCell-1) == false)
-               {
-                  if (reachLeft == false)
-                  {
-                     topStack.push(curCell-1);
-                     reachLeft = true;
-                  }
-               }
-
-               else if (reachLeft) reachLeft = false;
-            }
-
-            if (curCell % widthIndex < widthIndex-1)
-            {
-               if (this[curCell+1].mines == startMines && fullStack.has(curCell+1) == false)
-               {
-                  if (reachRight == false)
-                  {
-                     topStack.push(curCell+1);
-                     reachRight = true;
-                  }
-               }
-               
-               else if (reachRight) reachRight = false;
-            }
-
-            curCell += widthIndex;
-         }
-      }
-
-      let marginStack = new Set();
+      let emptyZone = new Set([cell]);
 
       if (includeFlags)
       {
-         for (let cell of fullStack)
+         for (let emptyCell of emptyZone)
          {
-            let nearbyCells = this.getNearbyCells(cell);
-   
-            for (let j=0; j<nearbyCells.length; j++)
+            if (this[emptyCell].mines == 0)
             {
-               if (this[nearbyCells[j]].mines != startMines)
+               let nearbyCells = this.getNearbyCells(emptyCell);
+
+               for (let j=0; j<nearbyCells.length; j++)
                {
-                  marginStack.add(nearbyCells[j])
+                  emptyZone.add(nearbyCells[j])
                }
             }
          }
       }
       else
       {
-         for (let cell of fullStack)
+         for (let emptyCell of emptyZone)
          {
-            if (this[cell].isFlagged) fullStack.delete(cell);
-   
-            let nearbyCells = this.getNearbyCells(cell);
-   
-            for (let j=0; j<nearbyCells.length; j++)
+            if (this[emptyCell].mines == 0)
             {
-               if (this[nearbyCells[j]].mines != startMines && this[nearbyCells[j]].isFlagged == false)
+               let nearbyCells = this.getNearbyCells(emptyCell);
+
+               for (let j=0; j<nearbyCells.length; j++)
                {
-                  marginStack.add(nearbyCells[j])
+                  if (this[nearbyCells[j]].isFlagged == false)
+                  {
+                     emptyZone.add(nearbyCells[j])
+                  }
                }
             }
          }
       }
 
-      return [...fullStack, ...marginStack];
+      return [...emptyZone];
+   }
+   /**
+    * Finds the indexes of all the square zone cells starting and ending at the specified indexes.
+    * @param {Number} begIndex The index of the start of the square zone
+    * @param {Number} endIndex The index of the end of the square zone
+    * @return {Array<number>} An array containing the indexes of all the cells present in the square zone
+    * @throws {Error} If parameters are invalid
+    */
+   getSquareZone(begIndex, endIndex)
+   {
+      begIndex = validateNumber(begIndex, 0, this.cells-1), endIndex = validateNumber(endIndex, 0, this.cells-1);
+
+      if (endIndex < begIndex) [begIndex, endIndex] = [endIndex, begIndex];
+
+      let begX = this.getCellCords(begIndex)[0];
+      let endX = this.getCellCords(endIndex)[0];
+
+      let squareZone = [];
+
+      for (let i=begIndex; i<=endIndex; i++)
+      {
+         let tmpX = this.getCellCords(i)[0];
+         if (begX <= tmpX && tmpX <= endX) squareZone.push(i);
+      }
+
+      return squareZone;
    }
 
 
    /**
     * @param {Number} cell The index of the desired cell
     * @returns {Array<Number>} An array that has the x and y cords of the desired cell at index 0 and 1 respectively
+    * @throws {Error} If parameters are invalid
     */
    getCellCords(cell)
    {
@@ -964,8 +955,9 @@ export default class Minefield
     * @param {Number} x The X coordinate of the desired cell
     * @param {Number} y The Y coordinate of the desired cell
     * @returns {Number} A Number that indicates the index of the cell that is in the specified row and column
+    * @throws {Error} If parameters are invalid
     */
-   getCellIndex(x, y)
+   getCellIndex([x, y])
    {
       x = validateNumber(x), y = validateNumber(y);
 
@@ -978,12 +970,7 @@ export default class Minefield
     */
    isNew()
    {
-      for (let i=0; i < this.cells; i++)
-      {
-         if (this[i].isOpen) return false;
-      }
-
-      return true;
+      return this.forEachCell(cell => {if (cell.isOpen) return false;}) ?? true;
    }
    /**
     * @returns {Boolean} a Boolean value that indicates whether the game is going on (after the first move, before game over)
@@ -993,15 +980,13 @@ export default class Minefield
       let foundClosedEmpty = false;
       let foundOpen = false;
 
-      for (let i=0; i < this.cells; i++)
+      return this.forEachCell(cell =>
       {
-         if (this[i].isOpen && this[i].isMine) return false;
+         if (cell.isOpen && cell.isMine) return false;
 
-         if (this[i].isOpen) foundOpen = true;
-         if (this[i].isOpen == false && this[i].isMine == false) foundClosedEmpty = true;
-      }
-
-      return foundOpen && foundClosedEmpty;
+         if (cell.isOpen) foundOpen = true;
+         else if (cell.isOpen == false && cell.isMine == false) foundClosedEmpty = true;
+      }) ?? (foundOpen && foundClosedEmpty);
    }
    /**
     * @returns {Boolean} a Boolean value that indicates whether the game is over (both cleared or lost)
@@ -1010,74 +995,65 @@ export default class Minefield
    {
       let foundClosedEmpty = false;
 
-      for (let i=0; i < this.cells; i++)
+      return this.forEachCell(cell =>
       {
-         if (this[i].isOpen == false && this[i].isMine == false) foundClosedEmpty = true;
-         if (this[i].isOpen && this[i].isMine) return true;
-      }
-
-      return foundClosedEmpty == false;
+         if (cell.isOpen == false && cell.isMine == false) foundClosedEmpty = true;
+         else if (cell.isOpen && cell.isMine) return true;
+      }) ?? foundClosedEmpty == false;
    }
    /**
     * @returns {Boolean} a Boolean value that indicates whether the minefield has been cleared (no mines opened)
     */
    isCleared()
    {
-      for (let i=0; i < this.cells; i++)
+      return this.forEachCell(cell =>
       {
-         if (this[i].isOpen == false && this[i].isMine == false) return false;
-         if (this[i].isOpen && this[i].isMine) return false;
-      }
-
-      return true;
+         if (cell.isOpen == false && cell.isMine == false) return false;
+         if (cell.isOpen && cell.isMine) return false;
+      }) ?? true;
    }
    /**
     * @returns {Boolean} a Boolean value that indicates whether a mine has been opened in the current minefield
     */
    isLost()
    {
-      for (let i=0; i < this.cells; i++)
-      {
-         if (this[i].isOpen && this[i].isMine) return true;
-      }
-
-      return false;
+      return this.forEachCell(cell => {if (cell.isOpen && cell.isMine) return true;}) ?? false;
    }
 
 
    /**
     * Console logs the minefield in a visual way. Legend:
-    * 
+    *
     *  - ?: Unknown cells (neither opened or flagged)
     *  - F: Flagged cells
     *  - [N]: An open cell, with its nearby mines number
     *  - X: An open mine
-    * 
+    *
     * @param {Boolean} allsee If true, every cell will be showed as if they were open (default: false)
     */
    visualDebug(allsee=false)
    {
       let text = "";
 
-      for (let i=0; i < this.cells; i++)
+      this.forEachCell((cell, i) =>
       {
-         let cell = "";
+         let char = "";
 
-         if (this[i].isOpen == false && allsee == false)
+         if (cell.isOpen == false && allsee == false)
          {
-            if (this[i].isFlagged) cell += "F";
-            else cell += "?";
+            if (cell.isFlagged) char += "F";
+            else char += "?";
          }
-         else if (this[i].isMine == true) cell += "X";
-         else cell += this[i].mines;
-         
-         if ((i+1) % this.width == 0) text += cell + "\n";
-         else text += cell + " ";
-      }
+         else if (cell.isMine == true) char += "X";
+         else char += cell.mines;
+
+         if ((i+1) % this.width == 0) text += char + "\n";
+         else text += char + " ";
+      });
 
       console.log(text);
    }
-   
+
 
    /**
     * @returns {Number} A Number that indicates the used flags in the current minefield
@@ -1086,14 +1062,15 @@ export default class Minefield
    {
       let flags = 0;
 
-      for (let i=0; i<this.cells; i++)
+      this.forEachCell(cell =>
       {
-         if (this[i].isFlagged) flags++;
-      }
+         if (cell.isFlagged) flags++;
+      });
 
       return flags;
    }
 };
+
 
 /**
  * An Object containing:
@@ -1131,10 +1108,10 @@ class Minefield2D extends Minefield
       return this;
    }
 
-   
+
    /**
     * Converts the Minefield2D object to a Minefield object.
-    * 
+    *
     * WARNING! The two objects will share the same reference to the same cells so any changes made to one will be reflected in the other
     * @returns {Minefield} A Minefield object
     */
@@ -1156,22 +1133,25 @@ class Minefield2D extends Minefield
 
 
    /**
-    *  - Opens a given cell and may open nearby ones following the minesweeper game rules.
-    *  - Can also give the coordinates of an already open cell that matches its nearby mines number with its nearby flags to automatically open all of its nearby not-flagged cells 
+    * Opens a given cell and may open nearby ones following the minesweeper game rules.
+    * @example
+    * minefield.openCell([5, 8], false, {nearbyOpening: true, nearbyFlagging: false});
     * @param {Number} x The X coordinate of the cell to open
     * @param {Number} y The Y coordinate of the cell to open
     * @param {Boolean} firstclick If true, and a bomb is opened, it will be moved in another cell starting from 0 (default: {@link isNew()})
+    * @param {Boolean} nearbyOpening Enables the opening of nearby cells if the given cell is already open and its nearby mines number matches the number of nearby flagged cells (default: true)
+    * @param {Boolean} nearbyFlagging Enables the flagging of nearby cells if the given cell is already open and its nearby mines number matches the number of nearby closed cells (default: true)
     * @returns {Array.<Array.<number>>} An array containing arrays with the coordinates of the updated cells
     * @throws {Error} If parameters are invalid
     */
-   openCell(x, y, firstclick=this.isNew())
+   openCell([x, y], firstclick=this.isNew(), {nearbyOpening=true, nearbyFlagging=true} = {})
    {
       x = validateNumber(x, 0, this.width-1), y = validateNumber(y, 0, this.height-1);
 
       let minefield = this.toMinefield();
-      let cell = minefield.getCellIndex(x, y)
+      let cell = minefield.getCellIndex([x, y])
 
-      let res = minefield.openCell(cell, firstclick);
+      let res = minefield.openCell(cell, firstclick, {nearbyOpening: nearbyOpening, nearbyFlagging: nearbyFlagging});
 
       let res2D = [];
 
@@ -1185,7 +1165,7 @@ class Minefield2D extends Minefield
 
    /**
     * Checks if a minefield is solvable from a given cell (by not guessing)
-    * 
+    *
     * WARNING! This method gets resource-intensive the more the minefield is big.
     * @param {Number} x The X coordinate of the cell where to start
     * @param {Number} y The Y coordinate of the cell where to start
@@ -1193,12 +1173,12 @@ class Minefield2D extends Minefield
     * @returns {Boolean} A Boolean value that indicates whether the minefield is solvable from the given cell
     * @throws {Error} If parameters are invalid
     */
-   isSolvableFrom(x, y, restore=true)
+   isSolvableFrom([x, y], restore=true)
    {
       x = validateNumber(x, 0, this.width-1), y = validateNumber(y, 0, this.height-1);
-      
+
       let minefield = this.toMinefield();
-      let cell = minefield.getCellIndex(x, y)
+      let cell = minefield.getCellIndex([x, y])
 
       return minefield.isSolvableFrom(cell, restore);
    }
@@ -1219,7 +1199,7 @@ class Minefield2D extends Minefield
 
       if (res.length == 0) return [];
       if (getOneHint) res = [res];
-      
+
 
       let res2D = [];
 
@@ -1229,13 +1209,12 @@ class Minefield2D extends Minefield
 
          for (let j=1; j<res[i].length; j++)
          {
-            res2D[i].push(minefield.getCellCords(res[i]));
+            res2D[i].push(minefield.getCellCords(res[i][j]));
          }
       }
 
       return res2D;
    }
-
 
    /**
     * Calculates nearby mines number for each cell and assigns the value*/
@@ -1255,8 +1234,8 @@ class Minefield2D extends Minefield
          {
             if (this[i][j].isMine)
             {
-               let nearbyCells = this.getNearbyCells(i, j, true);
-   
+               let nearbyCells = this.getNearbyCells([i, j], true);
+
                for (let k=0; k<nearbyCells.length; k++)
                {
                   this[nearbyCells[k][0]][nearbyCells[k][1]].mines++;
@@ -1268,33 +1247,35 @@ class Minefield2D extends Minefield
 
 
    /**
-    * @returns {Array.<object>} An Array containing only the cells of the Minefield object
+    * Executes a given function for every cell (passing them as parameters along with the corresponding index, like a forEach)
+    * @param {Function} fun A function to execute for each cell
+    * @returns {any} The loop stops whenever the function returns a value that is not undefined and returns that value
     */
-   getCellArray()
+   forEachCell(fun)
    {
-      let cellArray = [];
-
-      for (let i=0; i<this.width; i++)
+      for (let i=0; i<this.height; i++)
       {
-         for (let j=0; j<this.height; j++)
+         for (let j=0; j<this.width; j++)
          {
-            cellArray.push(this[i][j]);
+            let res = fun(this[j][i], j+i*this.width);
+            if (res !== undefined) return res;
          }
       }
 
-      return cellArray;
+      return undefined;
    }
    /**
+    * Finds the coordinates of the nearby cell at the given index
     * @param {Number} x The X coordinate of the concerned cell
     * @param {Number} y The Y coordinate of the concerned cell
     * @param {Boolean} includeSelf If true, also include the coordinates of the concerned cell (default: false)
     * @returns {Array.<Array.<number>>} An Array containing arrays with the coordinates of of the cells directly around the given one
     * @throws {Error} If parameters are invalid
     */
-   getNearbyCells(x, y, includeSelf=false)
+   getNearbyCells([x, y], includeSelf=false)
    {
       x = validateNumber(x, 0, this.width-1), y = validateNumber(y, 0, this.height-1);
-      
+
       let nearbyCells = [];
 
       let isNotFirstRow = y > 0;
@@ -1317,7 +1298,7 @@ class Minefield2D extends Minefield
       if (x < this.width-1) //if cell isn't on last column
       {
          nearbyCells.push([x+1, y]);                //right
-         
+
          if (isNotFirstRow) nearbyCells.push([x+1, y-1]); //up right
          if (isNotLastRow ) nearbyCells.push([x+1, y+1]); //down right
       }
@@ -1332,11 +1313,11 @@ class Minefield2D extends Minefield
     * @returns {Array.<Array.<number>>} An Array containing arrays with the coordinates of the empty cells zone starting from the given one
     * @throws {Error} If parameters are invalid
     */
-   getEmptyZone(x, y, includeFlags=false)
+   getEmptyZone([x, y], includeFlags=false)
    {
       let minefield = this.toMinefield();
 
-      let cell = minefield.getCellIndex(x, y)
+      let cell = minefield.getCellIndex([x, y])
 
       let res = minefield.getEmptyZone(cell, includeFlags);
 
@@ -1350,127 +1331,34 @@ class Minefield2D extends Minefield
 
       return res2D;
    }
-   
-
    /**
-    * @returns {Boolean} a Boolean value that indicates whether the game is new (before the first move)
+    * Finds the coordinates of all the square zone cells starting and ending at the specified coordinates
+    * @param {Number} begX The X coordinate of the start of the square zone
+    * @param {Number} begY The Y coordinate of the start of the square zone
+    * @param {Number} endX The X coordinate of the end of the square zone
+    * @param {Number} endY The Y coordinate of the end of the square zone
+    * @return {Array.<Array.<number>>} An array containing the coordinates of all the cells present in the square zone
+    * @throws {Error} If parameters are invalid
     */
-   isNew()
+   getSquareZone([begX, begY], [endX, endY])
    {
-      for (let i=0; i < this.width; i++)
+      begX = validateNumber(begX, 0, this.width-1), begY = validateNumber(begY, 0, this.height-1),
+      endX = validateNumber(endX, 0, this.width-1), endY = validateNumber(endY, 0, this.height-1);
+
+      if (endX < begX) [begX, endX] = [endX, begX];
+      if (endY < begY) [begY, endY] = [endY, begY];
+
+      let squareZone = [];
+
+      for (let i=begX; i<=endX; i++)
       {
-         for (let j=0; j < this.height; j++)
+         for (let j=begY; j<=endY; j++)
          {
-            if (this[i][j].isOpen) return false;
+            squareZone.push([i, j]);
          }
       }
 
-      return true;
-   }
-   /**
-    * @returns {Boolean} a Boolean value that indicates whether the game is going on (after the first move, before game over)
-    */
-   isGoingOn()
-   {
-      let foundClosedEmpty = false;
-      let foundOpen = false;
-
-      for (let i=0; i < this.width; i++)
-      {
-         for (let j=0; j < this.height; j++)
-         {
-            if (this[i][j].isOpen && this[i][j].isMine) return false;
-
-            if (this[i][j].isOpen) foundOpen = true;
-            if (this[i][j].isOpen == false && this[i][j].isMine == false) foundClosedEmpty = true;
-         }
-      }
-
-      return foundOpen && foundClosedEmpty;
-   }
-   /**
-    * @returns {Boolean} a Boolean value that indicates whether the game is over (both cleared or lost)
-    */
-   isOver()
-   {
-      let foundClosedEmpty = false;
-
-      for (let i=0; i < this.width; i++)
-      {
-         for (let j=0; j < this.height; j++)
-         {
-            if (this[i][j].isOpen == false && this[i][j].isMine == false) foundClosedEmpty = true;
-            if (this[i][j].isOpen && this[i][j].isMine) return true;
-         }
-      }
-
-      return foundClosedEmpty == false;
-   }
-   /**
-    * @returns {Boolean} a Boolean value that indicates whether the minefield has been cleared (no mines opened)
-    */
-   isCleared()
-   {
-      for (let i=0; i < this.width; i++)
-      {
-         for (let j=0; j < this.height; j++)
-         {
-            if (this[i][j].isOpen == false && this[i][j].isMine == false) return false;
-            if (this[i][j].isOpen && this[i][j].isMine) return false;
-         }
-      }
-
-      return true;
-   }
-   /**
-    * @returns {Boolean} a Boolean value that indicates whether a mine has been opened in the current minefield
-    */
-   isLost()
-   {
-      for (let i=0; i < this.width; i++)
-      {
-         for (let j=0; j < this.height; j++)
-         {
-            if (this[i][j].isOpen && this[i][j].isMine) return true;
-         }
-      }
-
-      return false;
-   }
-
-
-   /**
-    * Console logs the minefield in a visual way. Legend:
-    * 
-    *  - ?: Unknown cells (neither opened or flagged)
-    *  - F: Flagged cells
-    *  - [N]: An open cell, with its nearby mines number
-    *  - X: An open mine
-    * 
-    * @param {Boolean} allsee If true, every cell will be showed as if they were open (default: false)
-    */
-   visualDebug(allsee=false)
-   {
-      this.toMinefield().visualDebug(allsee);
-   }
-
-
-   /**
-    * @returns {Number} A Number that indicates the used flags in the current minefield
-    */
-   get usedFlags()
-   {
-      let flags = 0;
-
-      for (let i=0; i < this.width; i++)
-      {
-         for (let j=0; j < this.height; j++)
-         {
-            if (this[i][j].isFlagged) flags++;
-         }
-      }
-
-      return flags;
+      return squareZone;
    }
 }
 
@@ -1482,7 +1370,7 @@ function validateNumber(num, min=-Infinity, max=Infinity)
       if (isNaN(num)) throw new Error();
    }
    catch {throw new Error("Invalid parameter type");}
-   
+
    if (num < min) throw new Error("Parameter value is too small");
    if (num > max) throw new Error("Parameter value is too big");
 
