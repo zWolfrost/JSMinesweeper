@@ -1,4 +1,4 @@
-import Minefield from "./libraries/minesweeper.js";
+import Minefield from "https://cdn.jsdelivr.net/npm/@zwolfrost/minesweeper.js@2.3.2/src/minesweeper.min.js" //"../minesweeper.js/src/minesweeper.js"; //CHANGE BEFORE UPLOAD
 
 
 const BLOCKER = $("#blocker")[0];
@@ -33,6 +33,7 @@ let time = {beg: null, manage: null};
 startGame(false);
 resizeBoard();
 
+
 /*
 let ms;
 while (minefield.isLost() == false) //minefield.getCellArray().filter(x => x.isOpen).length <= 1//
@@ -52,8 +53,6 @@ console.log(`perf: ${ms}ms`)
 //b.resetMines();
 //b.openCell(5, 5)
 
-//console.log(b.mines);
-
 //b.visualDebug(true);
 
 //setBoard();
@@ -65,6 +64,9 @@ console.log(`perf: ${ms}ms`)
 
 //console.log(b.getNearbyCells([5, 3]));
 
+
+//console.log(minefield.simplify());
+//minefield.toMinefield2D().visualDebug(true);
 
 
 SMILE.on("mousedown", function()
